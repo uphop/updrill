@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Recorder from '../utilities/recorder';
-import { getAudioStream, exportBuffer } from '../utilities/audio';
+import { getAudioStream } from '../utilities/audio';
 
 class SpeechRecorder extends Component {
 
@@ -38,9 +38,9 @@ class SpeechRecorder extends Component {
   async stopRecord() {
     console.log('Recording stopped');
     const { recorder } = this.state;
-    const { buffer } = await recorder.stop()
-    const audio = exportBuffer(buffer[0]);
-    return audio;
+    const { buffer, blob } = await recorder.stop()
+    //const audio = exportBuffer(buffer[0]);
+    return blob;
   }
 
   render() {

@@ -48,6 +48,7 @@ const recordSampleRate = 44100;
 /**
  * Samples the buffer at 16 kHz.
  */
+/*
 function downsampleBuffer(buffer, exportSampleRate) {
   if (exportSampleRate === recordSampleRate) {
     return buffer;
@@ -77,23 +78,26 @@ function downsampleBuffer(buffer, exportSampleRate) {
 
   return result;
 }
-
+*/
+/*
 function floatTo16BitPCM(output, offset, input) {
   for (let i = 0; i < input.length; i++, offset += 2) {
     const s = Math.max(-1, Math.min(1, input[i]));
     output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
   }
 }
-
+*/
+/*
 function writeString(view, offset, string) {
   for (let i = 0; i < string.length; i++) {
     view.setUint8(offset + i, string.charCodeAt(i));
   }
 }
-
+*/
 /**
  * Encodes the buffer as a WAV file.
  */
+/*
 function encodeWAV(samples) {
   const buffer = new ArrayBuffer(44 + samples.length * 2);
   const view = new DataView(buffer);
@@ -115,12 +119,14 @@ function encodeWAV(samples) {
 
   return view;
 }
+*/
 
 /**
  * Samples the buffer at 16 kHz.
  * Encodes the buffer as a WAV file.
  * Returns the encoded audio as a Blob.
  */
+/*
 function exportBuffer(recBuffer) {
   const downsampledBuffer = downsampleBuffer(recBuffer, 16000);
   const encodedWav = encodeWAV(downsampledBuffer);
@@ -130,5 +136,5 @@ function exportBuffer(recBuffer) {
 
   return audioBlob;
 }
-
-export { getAudioStream, exportBuffer };
+*/
+export { getAudioStream };

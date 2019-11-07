@@ -34,7 +34,7 @@ class Recorder {
       }
 
       this.audioRecorder.clear();
-      this.audioRecorder.record((buffer) => { console.log('Recording...'); })
+      this.audioRecorder.record();
 
       resolve(this.stream);
     });
