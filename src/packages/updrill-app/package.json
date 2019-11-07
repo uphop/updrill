@@ -1,0 +1,50 @@
+{
+  "name": "interview-app",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@types/dotenv": "^8.2.0",
+    "@types/express-pino-logger": "^4.0.2",
+    "@types/pino": "^5.8.13",
+    "body-parser": "^1.19.0",
+    "inline-worker": "^1.1.0",
+    "isomorphic-ws": "^4.0.1",
+    "react": "^16.11.0",
+    "react-dom": "^16.11.0",
+    "react-player": "^1.13.0",
+    "react-scripts": "3.2.0",
+    "recorder-js": "^1.0.7",
+    "redux": "^4.0.4",
+    "typescript": "^3.6.4",
+    "xstate": "^4.6.7"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "server": "node-env-run server --exec nodemon | pino-colada",
+    "dev": "run-p server start",
+    "tsc": "tsc"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^12.11.7",
+    "@types/react": "^16.9.11"
+  },
+  "proxy": "http://localhost:3001"
+}
