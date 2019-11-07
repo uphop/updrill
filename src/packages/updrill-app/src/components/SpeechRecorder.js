@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Recorder from '../utilities/recorder';
-import { getAudioStream } from '../utilities/audio';
+// import { getAudioStream } from '../utilities/audio';
 
 class SpeechRecorder extends Component {
 
@@ -17,11 +17,11 @@ class SpeechRecorder extends Component {
 
   async componentDidMount() {
     try {
-      const stream = await getAudioStream();
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const recorder = new Recorder(audioContext, { onSilence: this.handleDetectedSilence });
-      recorder.init(stream);
-      this.setState({ stream, recorder });
+      //const stream = await getAudioStream();
+      //const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const recorder = new Recorder({ onSilence: this.handleDetectedSilence });
+      recorder.init();
+      this.setState({ recorder });
     } catch (error) {
       // Users browser doesn't support audio.
       // Add your handler here.
@@ -38,9 +38,9 @@ class SpeechRecorder extends Component {
   async stopRecord() {
     console.log('Recording stopped');
     const { recorder } = this.state;
-    const { buffer, blob } = await recorder.stop()
+    const { buffer, audio } = await recorder.stop()
     //const audio = exportBuffer(buffer[0]);
-    return blob;
+    return audio;
   }
 
   render() {

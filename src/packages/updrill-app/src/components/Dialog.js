@@ -78,7 +78,7 @@ class Dialog extends Component {
     }
 
     handleDetectedSilence() {
-        this.setState({ speech: { recording: false } });
+       this.stopSpeechRecording();
     }
 
     handleRecordedSpeech(audio) {
