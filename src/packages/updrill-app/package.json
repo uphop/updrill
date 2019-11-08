@@ -1,24 +1,26 @@
 {
   "name": "updrill-app",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
+  "description": "",
   "dependencies": {
     "inline-worker": "^1.1.0",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
     "react-player": "^1.13.0",
-    "react-scripts": "3.2.0",
+    "react-scripts": "^3.2.0",
     "redux": "^4.0.4",
     "typescript": "^3.6.4",
     "xstate": "^4.6.7"
   },
+  "author": "",
+  "license": "MIT",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "dev": "run-p server start",
-    "tsc": "tsc"
+    "dev": "run-p server start"
   },
   "eslintConfig": {
     "extends": "react-app"

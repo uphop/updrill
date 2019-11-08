@@ -26,81 +26,85 @@ class Dialog extends Component {
             }
             this.ws.onclose = () => {
                 // automatically try to reconnect on connection loss
-                this.setState({
-                    ws: new WebSocket(URL),
-                })
+                this.ws = new WebSocket(URL);
             }
-        } catch (error) {
-            // Users browser doesn't support audio.
-            // Add your handler here.
-            console.log(error);
-        }
+        } catch(error) {
+        // Users browser doesn't support audio.
+        // Add your handler here.
+        console.log(error);
+    }
+}
+
+render() {
+    // console.log(JSON.stringify(this.state, null, 4));
+
+    let clipPlayer;
+    const { clip } = this.state;
+    if (clip) {
+        clipPlayer = <ClipPlayer clip={clip} />;
     }
 
-    render() {
-        console.log(JSON.stringify(this.state, null, 4));
+    let speechRecorder;
+    const { speech } = this.state;
+    if (speech) {
+        speechRecorder = <SpeechRecorder
+            speech={speech}
+            handleRecordedSpeech={(audio) => this.handleRecordedSpeech(audio)}
+            handleDetectedSilence={() => this.handleDetectedSilence()}
+        />
+    }
 
-        let clipPlayer;
-        const { clip } = this.state;
-        if (clip) {
-            clipPlayer = <ClipPlayer clip={clip} />;
-        }
-
-        let speechRecorder;
-        const { speech } = this.state;
-        if (speech) {
-            speechRecorder = <SpeechRecorder
-                speech={speech}
-                handleRecordedSpeech={(audio) => this.handleRecordedSpeech(audio)}
-                handleDetectedSilence={() => this.handleDetectedSilence()}
-            />
-        }
-
-        return (
-            <div className="dialog">
-                {clipPlayer}
-                {speechRecorder}
-                <div className="mic-control">
-                    <p className="white-circle" onClick={() => this.stopSpeechRecording()}>
-                        <img id="mic-icon" src="mic-blue.png" width="60" height="64" alt="" />
-                    </p>
-                </div>
+    return (
+        <div className="dialog">
+            {clipPlayer}
+            {speechRecorder}
+            <div className="mic-control">
+                <p className="white-circle" onClick={() => this.stopSpeechRecording()}>
+                    <img id="mic-icon" src="mic-blue.png" width="60" height="64" alt="" />
+                </p>
             </div>
-        );
-    }
+        </div>
+    );
+}
 
-    startSpeechRecording() {
-        this.setState({ speech: { recording: true } });
-    }
+startSpeechRecording() {
+    console.log('Recording started');
+    this.setState({ clip: null, speech: { recording: true } });
+}
 
-    stopSpeechRecording() {
-        this.setState({ speech: { recording: false } });
-    }
+stopSpeechRecording() {
+    console.log('Recording stopped');
+    this.setState({ clip: null, speech: { recording: false } });
+}
 
-    handleDetectedSilence() {
-       this.stopSpeechRecording();
-    }
+handleDetectedSilence() {
+    console.log('Silence detected');
+    this.stopSpeechRecording();
+}
 
-    handleRecordedSpeech(audio) {
-        this.ws.send(audio);
-    }
+handleRecordedSpeech(audio) {
+    console.log('Detecting intent');
+    this.ws.send(audio);
+}
 
-    handleLexResponse(lexResponse) {
-        this.setState({
-            clip: {
-                url: lexResponse.sessionAttributes.currentClip,
-                playing: true,
-                loop: false,
-                volume: 1,
-                onEnded: this.handleClipPlaybackEnded.bind(this)
-            },
-            speech: null
-        });
-    }
+handleLexResponse(lexResponse) {
+    console.log('Clip playback started')
+    this.setState({
+        clip: {
+            url: lexResponse.sessionAttributes.currentClip,
+            playing: true,
+            loop: false,
+            volume: 1,
+            onEnded: this.handleClipPlaybackEnded.bind(this)
+        },
+        speech: null
+    });
+}
 
-    handleClipPlaybackEnded() {
-        this.startSpeechRecording();
-    }
+handleClipPlaybackEnded() {
+    console.log('Clip playback stopped')
+    this.startSpeechRecording();
+}
 }
 
 export default Dialog;

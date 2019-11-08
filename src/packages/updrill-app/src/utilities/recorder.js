@@ -7,18 +7,19 @@ class Recorder {
     this.audioSource = null;
     this.audioRecorder = null;
     this.stream = null;
+    this.getAudioStream = this.getAudioStream.bind(this);
   }
 
   init() {
     return new Promise((resolve) => {
-      // https://github.com/ijsnow/studiojs/blob/master/recorder/src/index.js
-      // https://sonoport.github.io/visualising-waveforms-with-web-audio.html
-      this.stream = this.getAudioStream();
-      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      this.audioSource = this.audioContext.createMediaStreamSource(this.stream);
-      this.audioRecorder = new Microphone(this.audioSource, { onSilence: this.config.onSilence });
-
-      resolve();
+      this.getAudioStream()
+        .then((stream) => {
+          this.stream = stream;
+          this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          this.audioSource = this.audioContext.createMediaStreamSource(this.stream);
+          this.audioRecorder = new Microphone(this.audioSource, { onSilence: this.config.onSilence });
+          resolve();
+        });
     });
   }
 
@@ -81,7 +82,9 @@ class Recorder {
       this.audioRecorder.stop();
 
       this.audioRecorder.getBuffer((buffer) => {
-        this.audioRecorder.exportWAV(blob => resolve({ buffer, blob }));
+        this.audioRecorder.exportWAV((blob) => { 
+          resolve({ buffer, blob }) 
+        });
       });
     });
   }

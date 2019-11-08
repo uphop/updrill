@@ -42,14 +42,13 @@ class Microphone {
     };
 
     this.context = source.context;
-    // Create a ScriptProcessorNode with a bufferSize of 4096 and a single input and output channel
     this.node = this.context.createScriptProcessor(4096, 2, 2);
 
     this.node.onaudioprocess = (e) => {
       if (!this.recording) return;
 
-      var buffer = [];
-      for (var channel = 0; channel < this.config.numChannels; channel++) {
+      let buffer = [];
+      for (let channel = 0; channel < this.config.numChannels; channel++) {
         buffer.push(e.inputBuffer.getChannelData(channel));
       }
 
@@ -87,15 +86,15 @@ class Microphone {
 
         this.silenceAnalyser.getByteTimeDomainData(dataArray);
 
-        for (var i = 0; i < bufferLength; i++) {
+        for (let i = 0; i < bufferLength; i++) {
           // Normalize between -1 and 1.
-          var curr_value_time = (dataArray[i] / 128) - 1.0;
+          const curr_value_time = (dataArray[i] / 128) - 1.0;
           if (curr_value_time > amplitude || curr_value_time < (-1 * amplitude)) {
             this.silenceStartTime = Date.now();
           }
         }
-        var newtime = Date.now();
-        var elapsedTime = newtime - this.silenceStartTime;
+        const newtime = Date.now();
+        const elapsedTime = newtime - this.silenceStartTime;
         if (elapsedTime > time) {
           this.config.onSilence();
         }

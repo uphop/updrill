@@ -17,11 +17,8 @@ class SpeechRecorder extends Component {
 
   async componentDidMount() {
     try {
-      //const stream = await getAudioStream();
-      //const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       const recorder = new Recorder({ onSilence: this.handleDetectedSilence });
-      recorder.init();
-      this.setState({ recorder });
+      recorder.init().then(() => { this.setState({ recorder }); });
     } catch (error) {
       // Users browser doesn't support audio.
       // Add your handler here.
@@ -30,22 +27,19 @@ class SpeechRecorder extends Component {
   }
 
   startRecord() {
-    console.log('Recording started');
     const { recorder } = this.state;
     recorder.start();
   }
 
   async stopRecord() {
-    console.log('Recording stopped');
     const { recorder } = this.state;
-    const { buffer, audio } = await recorder.stop()
-    //const audio = exportBuffer(buffer[0]);
-    return audio;
+    const { buffer, blob } = await recorder.stop();
+    return blob;
   }
 
   render() {
-    const { stream } = this.state;
-    if (!stream) {
+    const { recorder } = this.state;
+    if (!recorder) {
       return null;
     }
 
@@ -54,7 +48,9 @@ class SpeechRecorder extends Component {
       this.startRecord();
     } else {
       this.stopRecord()
-        .then((audio) => this.props.handleRecordedSpeech(audio))
+        .then((blob) => {
+          this.props.handleRecordedSpeech(blob);
+        })
         .catch((error) => console.log(error));
     }
 
