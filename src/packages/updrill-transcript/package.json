@@ -1,0 +1,33 @@
+{
+  "name": "updrill-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "tsc",
+    "watch:build": "tsc --watch",
+    "watch:server": "nodemon './dist/server/index.js' --watch './dist/server'",
+    "start": "npm-run-all clean build --parallel watch:build watch:server --print-label"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/eventstream-marshaller": "^0.1.0-preview.2",
+    "@aws-sdk/util-utf8-node": "^0.1.0-preview.1",
+    "aws-sdk": "^2.562.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "nodemon": "^1.19.4",
+    "npm-run-all": "^4.1.5",
+    "query-string": "^6.8.3",
+    "rimraf": "^3.0.0",
+    "ws": "^7.2.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.2",
+    "@types/ws": "^6.0.3",
+    "typescript": "^3.6.4"
+  }
+}

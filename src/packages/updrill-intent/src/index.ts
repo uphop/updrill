@@ -2,6 +2,7 @@ import * as express from 'express';
 import * as http from 'http';
 import * as WebSocket from 'ws';
 import * as AWS from 'aws-sdk';
+
 require('dotenv').config()
 
 const app = express();
@@ -12,22 +13,6 @@ const server = http.createServer(app);
 //initialize the WebSocket server instance
 const wss = new WebSocket.Server({ server });
 
-var isArrayBufferSupported = (new Buffer(new Uint8Array([1]).buffer)[0] === 1);
-var arrayBufferToBuffer = isArrayBufferSupported ? arrayBufferToBufferAsArgument : arrayBufferToBufferCycle;
- 
-function arrayBufferToBufferAsArgument(ab: any) {
-  return new Buffer(ab);
-}
-
-function arrayBufferToBufferCycle(ab: any) {
-  var buffer = new Buffer(ab.byteLength);
-  var view = new Uint8Array(ab);
-  for (var i = 0; i < buffer.length; ++i) {
-      buffer[i] = view[i];
-  }
-  return buffer;
-}
-
 wss.on('connection', (ws: WebSocket) => {
 
     ws.binaryType = 'arraybuffer';
@@ -35,7 +20,6 @@ wss.on('connection', (ws: WebSocket) => {
     //connection is up, let's add a simple simple event
     ws.on('message', (message: any) => {
         if (typeof message !== 'string') {
-            console.log(message);
 
             AWS.config.credentials = new AWS.Credentials(process.env.AWS_ACCESS_KEY_ID!, process.env.AWS_SECRET_ACCESS_KEY!, undefined);
             AWS.config.region = process.env.AWS_REGION!;
@@ -60,12 +44,35 @@ wss.on('connection', (ws: WebSocket) => {
             });
 
         } else {
-            console.log('received: %s', message);
+            console.log('received string');
         }
     });
 });
 
+function arrayBufferToBufferAsArgument(ab: any) {
+    return new Buffer(ab);
+}
+
+function arrayBufferToBufferCycle(ab: any) {
+    var buffer = new Buffer(ab.byteLength);
+    var view = new Uint8Array(ab);
+    for (var i = 0; i < buffer.length; ++i) {
+        buffer[i] = view[i];
+    }
+    return buffer;
+}
+
+function arrayBufferToBuffer(buffer: any) {
+    var isArrayBufferSupported = (new Buffer(new Uint8Array([1]).buffer)[0] === 1);
+    if (isArrayBufferSupported) {
+        return arrayBufferToBufferAsArgument(buffer);
+    }
+    else {
+        return arrayBufferToBufferCycle(buffer);
+    };
+}
+
 //start our server
-server.listen(process.env.PORT || 8999, () => {
+server.listen(process.env.SERVER_PORT || 8991, () => {
     console.log(`Server started.`);
 });

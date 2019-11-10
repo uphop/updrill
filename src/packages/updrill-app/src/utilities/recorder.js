@@ -17,7 +17,7 @@ class Recorder {
           this.stream = stream;
           this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
           this.audioSource = this.audioContext.createMediaStreamSource(this.stream);
-          this.audioRecorder = new Microphone(this.audioSource, { onSilence: this.config.onSilence });
+          this.audioRecorder = new Microphone(this.audioSource, { onSilence: this.config.onSilence, onAudio: this.config.onAudio });
           resolve();
         });
     });
@@ -80,13 +80,21 @@ class Recorder {
   stop() {
     return new Promise((resolve) => {
       this.audioRecorder.stop();
-
       this.audioRecorder.getBuffer((buffer) => {
-        this.audioRecorder.exportWAV((blob) => { 
-          resolve({ buffer, blob }) 
-        });
+        resolve(buffer);
       });
     });
+  }
+
+  playback(buffer) {
+    let buffers = buffer;
+    var newSource = this.audioContext.createBufferSource();
+    var newBuffer = this.audioContext.createBuffer(2, buffers[0].length, this.audioContext.sampleRate);
+    newBuffer.getChannelData(0).set(buffers[0]);
+    newBuffer.getChannelData(1).set(buffers[1]);
+    newSource.buffer = newBuffer;
+    newSource.connect(this.audioContext.destination);
+    newSource.start(0);
   }
 }
 

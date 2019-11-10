@@ -27,6 +27,7 @@ import InlineWorker from 'inline-worker';
 const defaultConfig = {
   bufferLen: 4096,
   numChannels: 2,
+  sampleRate: 44100,
   mimeType: 'audio/wav',
   onSilence: null
 };
@@ -42,7 +43,7 @@ class Microphone {
     };
 
     this.context = source.context;
-    this.node = this.context.createScriptProcessor(4096, 2, 2);
+    this.node = this.context.createScriptProcessor(this.config.bufferLen, this.config.numChannels, this.config.numChannels);
 
     this.node.onaudioprocess = (e) => {
       if (!this.recording) return;
@@ -57,10 +58,12 @@ class Microphone {
         buffer: buffer
       });
 
+      this.broadcastAudioChunk(buffer);
       this.analyseSilence();
     };
 
     this.silenceAnalyser = this.context.createAnalyser();
+    this.silenceAnalyser.fftSize = this.config.bufferLen;
     this.silenceAnalyser.minDecibels = -90;
     this.silenceAnalyser.maxDecibels = -10;
     this.silenceAnalyser.smoothingTimeConstant = 0.85;
@@ -78,7 +81,6 @@ class Microphone {
     */
     this.analyseSilence = function () {
       if (this.config.onSilence) {
-        this.silenceAnalyser.fftSize = 2048;
         var bufferLength = this.silenceAnalyser.fftSize;
         var dataArray = new Uint8Array(bufferLength);
         var amplitude = 0.2;
@@ -100,6 +102,12 @@ class Microphone {
         }
       }
     };
+
+    this.broadcastAudioChunk = function (buffer) {
+      if (this.config.onAudio) { 
+        this.config.onAudio(buffer); 
+      }
+    }
 
     let self = {};
     this.worker = new InlineWorker(function () {

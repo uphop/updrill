@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import Recorder from '../utilities/recorder';
-// import { getAudioStream } from '../utilities/audio';
 
 class SpeechRecorder extends Component {
 
@@ -13,11 +12,12 @@ class SpeechRecorder extends Component {
     };
 
     this.handleDetectedSilence = this.props.handleDetectedSilence;
+    this.handleRecordedChunk = this.props.handleRecordedChunk;
   }
 
   async componentDidMount() {
     try {
-      const recorder = new Recorder({ onSilence: this.handleDetectedSilence });
+      const recorder = new Recorder({ onSilence: this.handleDetectedSilence, onAudio: this.handleRecordedChunk });
       recorder.init().then(() => { this.setState({ recorder }); });
     } catch (error) {
       // Users browser doesn't support audio.
@@ -33,8 +33,8 @@ class SpeechRecorder extends Component {
 
   async stopRecord() {
     const { recorder } = this.state;
-    const { buffer, blob } = await recorder.stop();
-    return blob;
+    const audio = await recorder.stop();
+    return audio;
   }
 
   render() {
@@ -48,8 +48,8 @@ class SpeechRecorder extends Component {
       this.startRecord();
     } else {
       this.stopRecord()
-        .then((blob) => {
-          this.props.handleRecordedSpeech(blob);
+        .then((buffer) => {
+          this.props.handleRecordedSpeech(buffer);
         })
         .catch((error) => console.log(error));
     }
