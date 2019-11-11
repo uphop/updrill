@@ -4,13 +4,42 @@ import SpeechRecorder from './SpeechRecorder.js';
 import { exportBufferLex } from '../utilities/converter-lex'
 import { exportBufferTranscribe } from '../utilities/converter-transcribe'
 
+// -----------------------------------
+
+import 'video.js/dist/video-js.css';
+import videojs from 'video.js';
+
+import 'webrtc-adapter';
+import RecordRTC from 'recordrtc';
+
+// register videojs-record plugin with this import
+import 'videojs-record/dist/css/videojs.record.css';
+import Record from 'videojs-record/dist/videojs.record.js';
+
+// -----------------------------------
+
 const URL_INTENT = 'ws://localhost:8991'
 const URL_TRANSCRIBE = 'ws://localhost:8990'
 
-class Dialog extends Component {
+const videoJsOptions = {
+    controls: false,
+    width: 320,
+    height: 240,
+    fluid: false,
+    controlBar: {
+        volumePanel: false
+    },
+    plugins: {
+        record: {
+            audio: false,
+            video: true,
+            maxLength: 10,
+            debug: true
+        }
+    }
+};
 
-    ws_intent = new WebSocket(URL_INTENT);
-    ws_transcribe = new WebSocket(URL_TRANSCRIBE);
+class Dialog extends Component {
 
     transcript = '';
 
@@ -20,37 +49,103 @@ class Dialog extends Component {
             clip: null,
             speech: null
         }
+
+        this.ws_intent = new WebSocket(URL_INTENT);
+        this.ws_transcribe = new WebSocket(URL_TRANSCRIBE);
+
+        this.isReady = false;
     }
 
     async componentDidMount() {
         try {
-            // wire intent server events
-            this.ws_intent.onopen = () => {
-                this.startSpeechRecording();
-            }
-            this.ws_intent.onmessage = evt => {
-                this.handleIntentResponse(JSON.parse(evt.data));
-            }
-            this.ws_intent.onclose = () => {
-                // automatically try to reconnect on connection loss
-                this.ws_intent = new WebSocket(URL_INTENT);
-            }
+            // ---------------
+            // instantiate Video.js
+            this.player = videojs(this.videoNode, videoJsOptions, () => {
+                // print version information at startup
+                var version_info = 'Using video.js ' + videojs.VERSION +
+                    ' with videojs-record ' + videojs.getPluginVersion('record') +
+                    ' and recordrtc ' + RecordRTC.version;
+                videojs.log(version_info);
 
-            // wire transcribe server events
-            this.ws_transcribe.onopen = () => {
+                this.player.record().getDevice();
 
-            }
-            this.ws_transcribe.onmessage = evt => {
-                this.handleTranscribeResponse(JSON.parse(evt.data));
-            }
-            this.ws_transcribe.onclose = () => {
-                // automatically try to reconnect on connection loss
-                this.ws_transcribe = new WebSocket(URL_TRANSCRIBE);
-            }
+                // device is ready
+                this.player.on('deviceReady', () => {
+                    console.log('device is ready!');
+                    this.isReady = true;
+
+                    /*console.log('Recording type: ' + this.player.record().getRecordType());
+                    console.log('Recoridng: ' + this.player.record().isRecording());
+                    console.log('Starting recording...');
+
+                    this.player.record().start();
+                    console.log('Recoridng: ' + this.player.record().isRecording());
+                    console.log('Stopping recording...');
+                    //this.player.record().stopDevice();
+                    this.player.record().stop();
+                    console.log('Recoridng: ' + this.player.record().isRecording());*/
+                });
+
+                // user clicked the record button and started recording
+                this.player.on('startRecord', () => {
+                    console.log('started recording!');
+                });
+
+                // user completed recording and stream is available
+                this.player.on('finishRecord', () => {
+                    // recordedData is a blob object containing the recorded data that
+                    // can be downloaded by the user, stored on server etc.
+                    console.log('finished recording: ', this.player.recordedData);
+                });
+
+                // error handling
+                this.player.on('error', (element, error) => {
+                    console.warn(error);
+                });
+
+                this.player.on('deviceError', () => {
+                    console.error('device error:', this.player.deviceErrorCode);
+                });
+                // ---------------
+
+                // wire intent server events
+                this.ws_intent.onopen = () => {
+                    this.startSpeechRecording();
+                }
+                this.ws_intent.onmessage = evt => {
+                    this.handleIntentResponse(JSON.parse(evt.data));
+                }
+                this.ws_intent.onclose = () => {
+                    // automatically try to reconnect on connection loss
+                    this.ws_intent = new WebSocket(URL_INTENT);
+                }
+
+                // wire transcribe server events
+                this.ws_transcribe.onopen = () => {
+
+                }
+                this.ws_transcribe.onmessage = evt => {
+                    this.handleTranscribeResponse(JSON.parse(evt.data));
+                }
+                this.ws_transcribe.onclose = () => {
+                    // automatically try to reconnect on connection loss
+                    this.ws_transcribe = new WebSocket(URL_TRANSCRIBE);
+                }
+
+            });
+
+
         } catch (error) {
             // Users browser doesn't support audio.
             // Add your handler here.
             console.log(error);
+        }
+    }
+
+    // destroy player on unmount
+    componentWillUnmount() {
+        if (this.player) {
+            this.player.dispose();
         }
     }
 
@@ -83,17 +178,30 @@ class Dialog extends Component {
                         <img id="mic-icon" src="mic-blue.png" width="60" height="64" alt="" />
                     </p>
                 </div>
+
+                <div data-vjs-player>
+                    <video id="myVideo" ref={node => this.videoNode = node} className="video-js vjs-default-skin" playsInline></video>
+                </div>
             </div>
         );
     }
 
     startSpeechRecording() {
         console.log('Recording started');
+        if(this)
+        
         this.setState({ clip: null, speech: { recording: true } });
     }
 
     stopSpeechRecording() {
         console.log('Recording stopped');
+        if (this.isReady) {
+            if(this.player.record().isRecording()) {
+                this.player.record().stop();
+            } else {
+                this.player.record().start();
+            } 
+        }
         this.setState({ clip: null, speech: { recording: false } });
     }
 
