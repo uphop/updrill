@@ -6,22 +6,19 @@
   "dependencies": {
     "inline-worker": "^1.1.0",
     "react": "^16.11.0",
-    "react-app-rewired": "^2.1.5",
     "react-dom": "^16.11.0",
     "react-player": "^1.13.0",
     "react-scripts": "^3.2.0",
     "redux": "^4.0.4",
     "typescript": "^3.6.4",
-    "video.js": "^7.6.5",
-    "videojs-record": "^3.8.0",
     "xstate": "^4.6.7"
   },
   "author": "",
   "license": "MIT",
   "scripts": {
-    "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
-    "test": "react-app-rewired test",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
     "eject": "react-scripts eject",
     "dev": "run-p server start"
   },
@@ -44,9 +41,6 @@
     "@types/node": "^12.11.7",
     "@types/react": "^16.9.11",
     "css-loader": "^3.2.0",
-    "style-loader": "^1.0.0",
-    "webpack": "4.41.0",
-    "webpack-cli": "^3.3.10",
-    "webpack-dev-server": "3.2.1"
+    "style-loader": "^1.0.0"
   }
 }
