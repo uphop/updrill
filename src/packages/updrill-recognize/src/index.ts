@@ -22,6 +22,7 @@ wss.on('connection', (ws: WebSocket) => {
     //connection is up, let's add a simple simple event
     ws.on('message', (message: any) => {
         if (typeof message !== 'string') {
+            console.log(message);
             // init AWS credentials
             AWS.config.credentials = new AWS.Credentials(process.env.AWS_ACCESS_KEY_ID!, process.env.AWS_SECRET_ACCESS_KEY!, undefined);
             AWS.config.region = process.env.AWS_REGION!;

@@ -69,10 +69,11 @@ function handleEventStreamMessage(messageJson: any) {
             // if this transcript segment is final, add it to the overall transcription
             if (!results[0].IsPartial) {
                 transcription += transcript + "\n";
-
-                inbound_socket.send(JSON.stringify({
-                    transcript: transcript
-                }));
+                const response = JSON.stringify({
+                    transcript: transcription
+                });
+                console.log(response);
+                inbound_socket.send(response);
             }
         }
     }
@@ -124,7 +125,6 @@ function wireSocketEvents() {
 
 // https://stackoverflow.com/questions/55073003/amazon-transcribe-streaming-service-request-in-node-js-with-http-2-gives-no-resp
 wss.on('connection', (ws: WebSocket) => {
-    console.log('Inbound client connection openened.');
 
     inbound_socket = ws;
     inbound_socket.binaryType = 'arraybuffer';
@@ -139,7 +139,7 @@ wss.on('connection', (ws: WebSocket) => {
 
     // when we get audio data from the mic, send it to the WebSocket if possible
     outbound_socket.onopen = function () {
-        console.log('Outbound AWS Transctibe connection openned.');
+        console.log('Outbound AWS Transcribe connection openned.');
 
         //connection is up, let's add a simple simple event
         inbound_socket.on('message', (message: any) => {

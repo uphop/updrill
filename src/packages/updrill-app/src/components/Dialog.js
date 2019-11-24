@@ -1,93 +1,29 @@
 import React, { Component } from 'react';
 import ClipPlayer from './ClipPlayer.js';
 import SpeechRecorder from './SpeechRecorder.js';
-import { exportBufferLex } from '../utilities/converter-lex'
-import { exportBufferTranscribe } from '../utilities/converter-transcribe'
-
-const URL_INTENT = 'ws://localhost:8990';
-const URL_TRANSCRIBE = 'ws://localhost:8991';
-const URL_RECOGNIZE = 'ws://localhost:8992';
+import FaceSnapshot from './FaceSnapshot.js';
+import { exportBufferLex } from '../utilities/converter-lex';
+import { exportBufferTranscribe } from '../utilities/converter-transcribe';
 
 class Dialog extends Component {
 
-    transcript = '';
-
     constructor(props) {
         super(props);
+
+        // init state
         this.state = {
             clip: null,
-            speech: null
+            speech: null,
+            transcript: null,
+            snapshot: false
         }
-
-        this.ws_intent = new WebSocket(URL_INTENT);
-        this.ws_transcribe = new WebSocket(URL_TRANSCRIBE);
-        this.ws_recognize = new WebSocket(URL_RECOGNIZE);
-
-        this.imageCapture = null;
-        this.handleSnapshot = this.handleSnapshot.bind(this);
     }
-
-
-    handleSnapshot() {
-        this.imageCapture.takePhoto()
-            .then(blob => {
-                blob.arrayBuffer().then((buffer) => {
-                    this.ws_recognize.send(buffer);
-                });
-            })
-            .catch((error) => console.log(error));
-    };
 
     async componentDidMount() {
         try {
-
-            window.navigator.mediaDevices.getUserMedia({ video: true })
-                .then(function (mediaStream) {
-                    const mediaStreamTrack = mediaStream.getVideoTracks()[0];
-                    this.imageCapture = new ImageCapture(mediaStreamTrack);
-                    window.setInterval(this.handleSnapshot, 1000);
-                }.bind(this))
-                .catch((error) => console.log(error));
-
-            // ---------------
-
-            // wire intent server events
-            this.ws_intent.onopen = () => {
-                //this.startSpeechRecording();
-            }
-            this.ws_intent.onmessage = evt => {
-                this.handleIntentResponse(JSON.parse(evt.data));
-            }
-            this.ws_intent.onclose = () => {
-                // automatically try to reconnect on connection loss
-                this.ws_intent = new WebSocket(URL_INTENT);
-            }
-
-            // wire transcribe server events
-            this.ws_transcribe.onopen = () => {
-
-            }
-            this.ws_transcribe.onmessage = evt => {
-                this.handleTranscribeResponse(JSON.parse(evt.data));
-            }
-            this.ws_transcribe.onclose = () => {
-                // automatically try to reconnect on connection loss
-                this.ws_transcribe = new WebSocket(URL_TRANSCRIBE);
-            }
-
-            // wire recognize server events
-            this.ws_recognize.onopen = () => {
-
-            }
-            this.ws_recognize.onmessage = evt => {
-                console.log(JSON.parse(evt.data));
-                //this.handleTranscribeResponse(JSON.parse(evt.data));
-            }
-            this.ws_recognize.onclose = () => {
-                // automatically try to reconnect on connection loss
-                this.ws_recognize = new WebSocket(URL_RECOGNIZE);
-            }
-
+            this.initIntent();
+            this.initTranscribe();
+            this.initRecognize();
         } catch (error) {
             // Users browser doesn't support audio.
             // Add your handler here.
@@ -95,15 +31,12 @@ class Dialog extends Component {
         }
     }
 
-    // destroy player on unmount
     componentWillUnmount() {
-        if (this.player) {
-            this.player.dispose();
-        }
+
     }
 
     render() {
-        // console.log(JSON.stringify(this.state, null, 4));
+        console.log(JSON.stringify(this.state, null, 4));
 
         let clipPlayer;
         const { clip } = this.state;
@@ -122,19 +55,81 @@ class Dialog extends Component {
             />
         }
 
+        let faceSnapshot;
+        const { snapshot } = this.state;
+        if (snapshot) {
+            faceSnapshot = <FaceSnapshot
+                handleSnapshot={(buffer) => this.handleSnapshot(buffer)} />;
+        }
+
         return (
             <div className="dialog">
                 {clipPlayer}
                 {speechRecorder}
-                <div className="mic-control">
-                    <p className="white-circle" onClick={() => this.stopSpeechRecording()}>
-                        <img id="mic-icon" src="mic-blue.png" width="60" height="64" alt="" />
-                    </p>
-                </div>
-
-                <img id="image_ctrl" src={this.state.img} alt="Red dot" />
+                {faceSnapshot}
             </div>
         );
+    }
+
+    initIntent() {
+        // init socket
+        this.ws_intent = new WebSocket(process.env.REACT_APP_URL_INTENT);
+
+        // wire intent server events
+        this.ws_intent.onopen = () => {
+            this.startSpeechRecording();
+        }
+        this.ws_intent.onmessage = evt => {
+            this.handleIntentResponse(JSON.parse(evt.data));
+        }
+        this.ws_intent.onclose = () => {
+            // automatically try to reconnect on connection loss
+            this.ws_intent = new WebSocket(process.env.REACT_APP_URL_INTENT);
+        }
+    }
+
+    initTranscribe() {
+        // init socket
+        this.ws_transcribe = new WebSocket(process.env.REACT_APP_URL_TRANSCRIBE);
+
+        // wire transcribe server events
+        this.ws_transcribe.onopen = () => {
+
+        }
+        this.ws_transcribe.onmessage = evt => {
+            this.handleTranscribeResponse(JSON.parse(evt.data));
+        }
+        this.ws_transcribe.onclose = () => {
+            // automatically try to reconnect on connection loss
+            this.ws_transcribe = new WebSocket(process.env.REACT_APP_URL_TRANSCRIBE);
+        }
+    }
+
+    initRecognize() {
+        // init socket
+        this.ws_recognize = new WebSocket(process.env.REACT_APP_URL_RECOGNIZE);
+
+        // wire recognize server events
+        this.ws_recognize.onopen = () => {
+            this.startSnapshotShooting();
+        }
+        this.ws_recognize.onmessage = evt => {
+            this.handleRecognizeResponse(JSON.parse(evt.data))
+        }
+        this.ws_recognize.onclose = () => {
+            // automatically try to reconnect on connection loss
+            this.ws_recognize = new WebSocket(process.env.REACT_APP_URL_RECOGNIZE);
+        }
+    }
+
+    startSnapshotShooting() {
+        console.log('Shooting started');
+        this.setState({ snapshot: { shooting: true } });
+    }
+
+    stopSnapshotShooting() {
+        console.log('Shooting stopped');
+        this.setState({ snapshot: { shooting: false } });
     }
 
     startSpeechRecording() {
@@ -159,12 +154,15 @@ class Dialog extends Component {
 
     handleRecordedChunk(buffer) {
         const exportedBuffer = exportBufferTranscribe(buffer[0]);
-        this.ws_transcribe.send(exportedBuffer)
+        this.ws_transcribe.send(exportedBuffer);
     }
+
+    handleSnapshot(buffer) {
+        this.ws_recognize.send(buffer);
+    };
 
     handleIntentResponse(data) {
         console.log('Detected intent: ' + data.intentName);
-        console.log('Lex trascript: ' + data.inputTranscript);
 
         console.log('Clip playback started')
         this.setState({
@@ -181,6 +179,23 @@ class Dialog extends Component {
 
     handleTranscribeResponse(data) {
         console.log('Transcribe transcript: ' + data.transcript);
+        /*let { transcript } = this.state;
+        if (!transcript) transcript = '';
+
+        transcript +=  data.transcript;
+        transcript +=  '\r\n';
+        this.setState({transcript: transcript });*/
+    }
+
+    handleRecognizeResponse(data) {
+        console.log('Emotions detected');
+        const faceDetails = data.FaceDetails[0];
+        const faceHistory = {
+            smile: faceDetails.Smile,
+            emotions: faceDetails.Emotions
+        };
+
+        //console.log('Recognize response: ' + JSON.stringify(faceHistory, null, 4));
     }
 
     handleClipPlaybackEnded() {
